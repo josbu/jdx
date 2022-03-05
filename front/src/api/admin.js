@@ -60,13 +60,6 @@ export function updateWebsiteConfig(data) {
   });
 }
 
-export function getWxPusher() {
-  return request({
-    url: "admin/wxPusher",
-    method: "get"
-  });
-}
-
 export function updateWxPusher(data) {
   return request({
     url: "admin/wxPusher",

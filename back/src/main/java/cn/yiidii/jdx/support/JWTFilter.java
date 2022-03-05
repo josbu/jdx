@@ -40,7 +40,8 @@ public class JWTFilter extends OncePerRequestFilter {
                     "/bindWXPusher",
                     "/oauth/**",
                     "/auth/**",
-                    "/third/**"
+                    "/third/**",
+                    "/cfd"
             );
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
@@ -62,7 +63,7 @@ public class JWTFilter extends OncePerRequestFilter {
             try {
                 JWTValidator.of(token).validateDate();
             } catch (Throwable e) {
-                R<?> fail = R.failed(1, "Token失效");
+                R<?> fail = R.failed(1, "登录身份已失效，请重新登录");
                 response.setStatus(HttpStatus.HTTP_UNAUTHORIZED);
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 response.setContentType(ContentType.JSON.getValue());

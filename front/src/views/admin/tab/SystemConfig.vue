@@ -14,7 +14,7 @@
       <van-cell-group inset>
         <van-cell title="标题" :value="title" clickable/>
         <van-cell title="公告" :value="notice" clickable/>
-        <van-cell title="公告模式" :value="noticeModel" clickable/>
+        <van-cell title="底部公告" :value="bottomNotice" clickable/>
       </van-cell-group>
 
       <template #right>
@@ -38,21 +38,12 @@
             placeholder="公告"
         />
         <van-field
-            readonly
-            clickable
-            name="picker"
-            :value="noticeModel"
-            label="公告模式"
-            @click="noticeModelPicker.show = true"
+            v-model="bottomNotice"
+            label="底部公告"
+            autosize
+            type="textarea"
+            placeholder="底部公告"
         />
-        <van-popup v-model="noticeModelPicker.show" position="bottom">
-          <van-picker
-              show-toolbar
-              :columns="noticeModelPicker.supportModel"
-              @cancel="noticeModelPicker.show = false"
-              @confirm="onConfirmNoticeModel"
-          />
-        </van-popup>
         <div style="margin: 16px;">
           <van-button round block type="info" @click="updateWebsiteConfig()"
           >提交
@@ -61,6 +52,57 @@
       </van-form>
     </van-action-sheet>
     <!-- 网站设置 end -->
+
+    <!-- wxPusher -->
+    <van-divider
+        :style="{
+        color: '#1989fa',
+        borderColor: '#1989fa',
+        padding: '0 16px',
+        marginTop: '32px'
+      }"
+    >wxPusher设置
+    </van-divider>
+    <van-swipe-cell>
+      <van-cell-group inset>
+        <van-cell title="appToken" :value="wxPusher.appToken"/>
+        <van-cell title="管理员UID" :value="wxPusher.adminUid"/>
+      </van-cell-group>
+
+      <template #right>
+        <van-button
+            square
+            type="info"
+            class="slide-button"
+            text="编辑"
+            @click="wxPusher.actionSheet.show = true"
+        />
+      </template>
+    </van-swipe-cell>
+
+    <van-action-sheet v-model="wxPusher.actionSheet.show" title="编辑WxPusher">
+      <van-form>
+        <van-field
+            v-model="wxPusher.appToken"
+            label="appToken"
+            placeholder="appToken"
+        />
+        <van-field
+            v-model="wxPusher.adminUid"
+            label="管理员UID"
+            autosize
+            type="textarea"
+            placeholder="管理员UID"
+        />
+        <div style="margin: 16px;">
+          <van-button round block type="info" @click="updateWxPusher()"
+          >提交
+          </van-button>
+        </div>
+      </van-form>
+    </van-action-sheet>
+
+    <!-- wxPusher end -->
 
     <!-- 定时任务配置 -->
     <van-divider
@@ -201,7 +243,7 @@ import {
   updateWebsiteConfig,
   checkCookie,
   updateCheckCookieCron,
-  updateAccount
+  updateAccount, updateWxPusher
 } from "@/api/admin";
 
 export default {
@@ -210,17 +252,18 @@ export default {
     return {
       title: "",
       notice: "",
-      noticeModel: "",
-      noticeModelPicker: {
-        show: false,
-        title: "编辑公告模式",
-        supportModel: ["TOP", "HTML"]
-      },
+      bottomNotice: "",
 
       websiteConfig: {
         show: false,
       },
-
+      wxPusher: {
+        actionSheet: {
+          show: false
+        },
+        appToken: '',
+        adminUid: '',
+      },
       checkCookie: {
         cron: "",
         picker: {
@@ -231,7 +274,6 @@ export default {
           data: []
         }
       },
-
       accountConfig: {
         username: '',
         password: '',
@@ -249,17 +291,19 @@ export default {
       getSystemConfig().then(resp => {
         this.title = resp.data.title;
         this.notice = resp.data.notice;
-        this.noticeModel = resp.data.noticeModel;
+        this.bottomNotice = resp.data.bottomNotice;
         this.checkCookie.cron = resp.data.checkCookieCron;
         this.accountConfig.username = resp.data.username
         this.accountConfig.password = resp.data.password
+        this.wxPusher.appToken = resp.data.appToken
+        this.wxPusher.adminUid = resp.data.adminUid
       });
     },
     updateWebsiteConfig: function () {
       let param = {};
       param.title = this.title;
       param.notice = this.notice;
-      param.noticeModel = this.noticeModel;
+      param.bottomNotice = this.bottomNotice;
       updateWebsiteConfig(param).then(resp => {
         this.title = resp.data.title;
         this.notice = resp.data.notice;
@@ -285,10 +329,6 @@ export default {
         this.checkCookie.picker.show = false;
       });
     },
-    onConfirmNoticeModel(value) {
-      this.noticeModel = value
-      this.noticeModelPicker.show = false
-    },
     logout: function () {
       localStorage.removeItem("token");
       this.$router.push("/login")
@@ -304,6 +344,15 @@ export default {
         localStorage.removeItem("token")
         this.$router.push("/login")
       }, 800)
+    },
+    updateWxPusher: function () {
+      let param = {
+        appToken: this.wxPusher.appToken,
+        adminUid: this.wxPusher.adminUid
+      };
+      updateWxPusher(param).then(() => {
+        this.wxPusher.actionSheet.show = false;
+      });
     }
   }
 };

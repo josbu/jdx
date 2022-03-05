@@ -5,9 +5,6 @@
         <van-tab title="青龙管理">
           <QLManage />
         </van-tab>
-        <van-tab title="WxPush管理">
-          <WxPushManage />
-        </van-tab>
         <van-tab title="系统设置">
           <SystemConfig />
         </van-tab>

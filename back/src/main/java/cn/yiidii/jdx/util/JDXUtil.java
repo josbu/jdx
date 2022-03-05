@@ -2,7 +2,9 @@ package cn.yiidii.jdx.util;
 
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.yiidii.jdx.config.prop.SystemConfigProperties.QLConfig;
 import cn.yiidii.jdx.model.ex.BizException;
+import com.sun.org.apache.regexp.internal.RE;
 import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 
@@ -26,4 +28,10 @@ public class JDXUtil {
             throw new BizException("Cookie格式不正确");
         }
     }
+
+    public String getUidFromRemark(String remark) {
+        return StrUtil.split(remark, "@@").stream().filter(e -> StrUtil.startWith(e, "UID_")).findFirst().orElse("");
+    }
+
+
 }

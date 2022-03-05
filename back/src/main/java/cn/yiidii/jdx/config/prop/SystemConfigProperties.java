@@ -43,10 +43,13 @@ public class SystemConfigProperties implements InitializingBean, ITask {
     private String password = "123465";
 
     private String title;
-    private String notice;
-    private String noticeModel = "TOP";
+    private String notice = "这是一条测试公告，只支持顶部";
+    private String indexBottomNotice = "这是底部说明，只支持html";
     private String checkCookieCron = "0 0 12 * * ?";
     private List<QLConfig> qls;
+
+    private String wxPusherAppToken = "AT_xxxxx";
+    private String wxPusherAdminUid = "UID_xxxxx";
 
 
     @PostConstruct

@@ -3,11 +3,14 @@ package cn.yiidii.jdx.service;
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.net.URLEncoder;
+import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.http.ContentType;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import cn.yiidii.jdx.model.dto.AdminNotifyEvent;
 import cn.yiidii.jdx.model.dto.JdInfo;
 import cn.yiidii.jdx.model.ex.BizException;
 import cn.yiidii.jdx.util.JDXUtil;
@@ -116,6 +119,8 @@ public class JdService {
         String ptPin = data.getString("pt_pin");
         String cookie = StrUtil.format("pt_key={};pt_pin={};", ptKey, URLEncoder.DEFAULT.encode(ptPin, StandardCharsets.UTF_8));
         timedCache.remove(mobile);
+        // 通知管理员
+        SpringUtil.publishEvent(new AdminNotifyEvent("系统通知", StrUtil.format("{} 获取了京东Cookie", DesensitizedUtil.mobilePhone(mobile))));
         return new JdInfo().builder().cookie(cookie).ptPin(JDXUtil.getPtPinFromCK(cookie)).build();
     }
 

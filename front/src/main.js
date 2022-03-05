@@ -36,6 +36,7 @@ import {
   Step,
   Steps,
   List,
+  Tag,
   Toast,
   Dialog
 } from "vant";
@@ -73,6 +74,7 @@ Vue.use(Loading);
 Vue.use(Step);
 Vue.use(Steps);
 Vue.use(List);
+Vue.use(Tag);
 Vue.use(Dialog);
 
 Vue.use(VueClipboard);

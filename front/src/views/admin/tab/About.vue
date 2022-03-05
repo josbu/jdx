@@ -136,6 +136,13 @@ export default {
             "新增：QL最大车位和禁用QL配置",
             "新增：检测系统版本"
           ]
+        },
+        {
+          date: "2022-03-02",
+          logs: [
+            "修复：备注修改不上的bug",
+            "新增：一些操作推送到WxPusher",
+          ]
         }
       ],
       versionInfo: {

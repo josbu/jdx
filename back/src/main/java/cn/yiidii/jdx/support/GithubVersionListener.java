@@ -7,6 +7,7 @@ import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
+import cn.yiidii.jdx.model.dto.AdminNotifyEvent;
 import cn.yiidii.jdx.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSONObject;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ public class GithubVersionListener implements ITask {
             needUpgrade = true;
             GithubVersionListener.latestVersion = latestVersionStr;
             scheduleTaskUtil.stopCron("SYS_checkUpgrade");
+            SpringUtil.publishEvent(new AdminNotifyEvent("JDX版本更新通知", StrUtil.format("检测到JDX最新版本号: v{}, 当前版本号: v{}", latestVersionStr, appVersionStr)));
         }
     }
 
