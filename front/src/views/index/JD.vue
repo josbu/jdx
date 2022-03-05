@@ -3,12 +3,14 @@
     <div v-if="!haveCookie">
       <van-field
           v-model="form.mobile"
+          left-icon="phone-o"
           name="mobile"
           label="手机号"
           placeholder="手机号"
       ></van-field>
       <van-field
           v-model="form.code"
+          left-icon="shield-o"
           name="code"
           label="验证码"
           placeholder="验证码"
@@ -51,6 +53,7 @@
     <div v-else>
       <van-field
           v-model="cookieForm.cookie"
+          left-icon="user-o"
           name="cookie"
           label="Cookie"
           placeholder="pt_key=xxx;pt_pin=xxx;"
@@ -59,7 +62,7 @@
         <van-button
             round
             block
-            :disabled="!cookieForm.cookie"
+            :disabled="!(cookieForm.cookie )"
             type="primary"
             @click="submitCk"
         >
@@ -77,9 +80,9 @@
       </div>
     </div>
 
-    <van-dialog v-model="wxPusher.show" title="扫码关注一对一" show-cancel-button>
+    <van-dialog v-model="wxPusher.show" title="扫码关注获得最新消息" show-cancel-button>
       <img :src="wxPusher.qr" width="100%"/>
-      <div style="padding: 4px 32px;text-align: center">扫描完成后请在公众号好关注是否已经完成绑定</div>
+      <div style="padding: 4px 32px;text-align: center">扫描完成后请在公众号关注是否已经完成绑定</div>
     </van-dialog>
   </div>
 </template>
@@ -91,6 +94,7 @@ export default {
     return {
       expireTime: 0,
       haveCookie: false,
+      remain: 0,
       form: {
         mobile: "",
         code: ""
@@ -113,6 +117,7 @@ export default {
           .then(resp => {
             this.title = resp.data.title;
             this.notice = resp.data.notice;
+            this.remain = resp.data.remain
           })
           .catch(err => {
             console.log(err);
@@ -152,7 +157,9 @@ export default {
                       .$copyText(response.data.cookie)
                       .then(() => {
                         _this.$toast.success("复制成功");
-                        _this.ifPushToQL()
+                        if (_this.remain > 0) {
+                          _this.ifPushToQL()
+                        }
                       })
                       .catch((e) => {
                         console.error(e)
@@ -175,10 +182,6 @@ export default {
               cancelButtonText: "不了"
             }).then(() => {
           this.doSubmitCk()
-          let _this = this;
-          setTimeout(() => {
-            _this.ifShowBindWxPusher()
-          }, 300)
         }).catch(() => {
         })
       }, 300)
@@ -197,11 +200,14 @@ export default {
     },
     submitCk: async function () {
       await this.doSubmitCk()
-      this.ifShowBindWxPusher()
     },
     doSubmitCk: function () {
       submitCk(this.cookieForm).then((resp) => {
         this.wxPusher.qr = resp.data.dynamicWxPusherQRCode
+        let _this = this;
+        setTimeout(() => {
+          _this.ifShowBindWxPusher()
+        }, 300)
       })
     }
   }

@@ -15,7 +15,6 @@ import cn.yiidii.jdx.util.jd.JDTaskUtil;
 import com.alibaba.fastjson.JSONObject;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
@@ -100,7 +99,7 @@ public class IndexController {
         jo.put("remain", systemConfigProperties.getQls().stream()
                 .filter(ql -> ql.getDisabled() == 0 && ql.getUsed() < ql.getMax())
                 .map(ql -> ql.getMax() - ql.getUsed())
-                .reduce((a, b) -> a + b));
+                .reduce(0, (a, b) -> a + b));
         return R.ok(jo);
     }
 

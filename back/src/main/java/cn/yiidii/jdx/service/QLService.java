@@ -77,7 +77,7 @@ public class QLService implements ITask {
         String displayName = qlConfig.getDisplayName();
         // 获取存在的env
         String ptPin = JDXUtil.getPtPinFromCK(value);
-        JSONObject existEnv = this.getExistCK(qlConfig, StrUtil.format("pt_pin={};", ptPin));
+        JSONObject existEnv = this.getExistCK(qlConfig, ptPin);
 
         // 推送青龙
         if (existEnv.isEmpty()) {
@@ -125,7 +125,7 @@ public class QLService implements ITask {
     public void bindWxPushUidToRemark(String ptPin, String uid) {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         qlConfigs.forEach(qlConfig -> {
-            List<JSONObject> envs = this.searchEnv(qlConfig, StrUtil.format("pt_pin={}", ptPin));
+            List<JSONObject> envs = this.searchEnv(qlConfig, ptPin);
             if (CollUtil.isEmpty(envs)) {
                 return;
             }
@@ -201,6 +201,7 @@ public class QLService implements ITask {
         String id = envJo.getString("id");
         String displayName = qlConfig.getDisplayName();
         // 第一次，用_id
+        envJo.remove("id");
         envJo.put("_id", id);
         log.debug(StrUtil.format("[青龙 - {}] 第一次尝试更新环境变量, 参数: {}", displayName, envJo.toJSONString()));
         HttpResponse response = HttpRequest.put(qlConfig.getUrl().concat("open/envs"))

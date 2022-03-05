@@ -1,5 +1,6 @@
 <template>
   <div style="padding: 16px ">
+
     <!-- 版本信息 -->
     <div style="text-align: center">
       <van-divider
@@ -18,6 +19,7 @@
         检查更新
       </van-button>
     </div>
+
     <!-- 声明 -->
     <div>
       <van-divider
@@ -32,6 +34,28 @@
           </p>
         </li>
       </ul>
+    </div>
+
+    <!-- 打赏开发者 -->
+    <div class="block">
+      <van-divider
+          :style="{ color: '#1989fa', borderColor: '#1989fa', padding: '0 16px' }"
+      >打赏开发者
+      </van-divider>
+      <div style="text-align: center; margin: 16px 0;color: #909399">
+        <div>打赏开发者喝杯咖啡吧~</div>
+        <van-button
+            style="margin-top: 16px"
+            color="linear-gradient(to right, #ff6034, #ee0a24)"
+            @click="show = true"
+            size="small"
+        >
+          打赏开发者
+        </van-button>
+      </div>
+
+      <van-image-preview v-model="show" :images="images" :closeable="true">
+      </van-image-preview>
     </div>
 
     <!-- 更新日志 -->
@@ -54,26 +78,6 @@
       </div>
     </div>
 
-    <div class="block">
-      <van-divider
-          :style="{ color: '#1989fa', borderColor: '#1989fa', padding: '0 16px' }"
-      >打赏开发者
-      </van-divider>
-      <div style="text-align: center; margin: 16px 0;color: #909399">
-        <div>打赏开发者喝杯咖啡吧~</div>
-        <van-button
-            style="margin-top: 16px"
-            color="linear-gradient(to right, #ff6034, #ee0a24)"
-            @click="show = true"
-            size="small"
-        >
-          打赏开发者
-        </van-button>
-      </div>
-
-      <van-image-preview v-model="show" :images="images" :closeable="true">
-      </van-image-preview>
-    </div>
   </div>
 </template>
 
@@ -142,6 +146,13 @@ export default {
           logs: [
             "修复：备注修改不上的bug",
             "新增：一些操作推送到WxPusher",
+          ]
+        },
+        {
+          date: "2022-03-05",
+          logs: [
+            "修复：修复了一堆bug...",
+            "新增：内置并发抢财富岛",
           ]
         }
       ],

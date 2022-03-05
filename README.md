@@ -21,7 +21,7 @@ docker run -d \
     -v <config dir>:/jdx/config \
     -p <port>:80 \
     --restart=always \
-    --name jdx registry.cn-hangzhou.aliyuncs.com/yiidii-hub/jdx:v0.2.1
+    --name jdx registry.cn-hangzhou.aliyuncs.com/yiidii-hub/jdx:v0.2.2
 ```
 > 这里命令自行替换卷和端口映射
 > 
@@ -31,7 +31,7 @@ docker run -d \
 >   -v  /data/jdx/config:/jdx/config \
 >   -p 5702:80 \
 >   --restart=always \
->   --name jdx registry.cn-hangzhou.aliyuncs.com/yiidii-hub/jdx:v0.2.1
+>   --name jdx registry.cn-hangzhou.aliyuncs.com/yiidii-hub/jdx:v0.2.2
 > ```
 > 
 注意：
