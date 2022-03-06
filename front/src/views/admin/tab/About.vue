@@ -154,6 +154,13 @@ export default {
             "修复：修复了一堆bug...",
             "新增：内置并发抢财富岛",
           ]
+        },
+        {
+          date: "2022-03-06",
+          logs: [
+            "修复：更新Cookie更新所有节点的",
+            "修复：底部公告html不生效",
+          ]
         }
       ],
       versionInfo: {
@@ -174,24 +181,9 @@ export default {
     },
     checkUpgrade: function () {
       checkUpgrade().then(resp => {
-        this.versionInfo = resp.data
-      })
+        this.versionInfo = resp.data;
+      });
     }
   }
 };
 </script>
-
-<style scoped>
-.block {
-  margin-top: 48px;
-}
-
-ul {
-  margin-left: 16px;
-}
-
-li {
-  margin-top: 16px;
-}
-
-</style>
