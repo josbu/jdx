@@ -10,6 +10,7 @@ import cn.yiidii.jdx.model.ex.BizException;
 import cn.yiidii.jdx.service.AdminService;
 import cn.yiidii.jdx.service.JDTaskService;
 import cn.yiidii.jdx.support.GithubVersionListener;
+import cn.yiidii.jdx.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import java.util.List;
@@ -42,6 +43,7 @@ public class AdminController {
     private final SystemConfigProperties systemConfigProperties;
     private final JDTaskService jdTaskService;
     private final GithubVersionListener githubVersionListener;
+    private final ScheduleTaskUtil scheduleTaskUtil;
 
     @GetMapping("ql")
     public R<?> qlConfig() {
@@ -121,6 +123,7 @@ public class AdminController {
             throw new BizException("cron表达式不正确");
         }
         systemConfigProperties.setCheckCookieCron(cron);
+        scheduleTaskUtil.startCron("jdTask_checkCookie", () -> jdTaskService.timerCheckCookie(), cron);
         return R.ok(null, "修改成功");
     }
 

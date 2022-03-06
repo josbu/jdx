@@ -20,11 +20,10 @@
 import QLManage from "@/views/admin/tab/QLManage";
 import SystemConfig from "@/views/admin/tab/SystemConfig";
 import About from "@/views/admin/tab/About";
-import WxPushManage from "@/views/admin/tab/WxPushManage";
 
 export default {
   name: "Home",
-  components: { QLManage, SystemConfig, About, WxPushManage },
+  components: { QLManage, SystemConfig, About },
   data() {
     return {
       active: 0

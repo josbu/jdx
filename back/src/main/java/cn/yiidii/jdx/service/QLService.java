@@ -27,7 +27,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -55,14 +58,21 @@ public class QLService implements ITask {
         if (CollUtil.isEmpty(availableQlConfigs)) {
             throw new BizException("无可用节点");
         }
-        // 随机一个节点
-        QLConfig qlConfig = availableQlConfigs.get(RandomUtil.randomInt(availableQlConfigs.size()));
-        // 处理备注 TODO
         String ptPin = JDXUtil.getPtPinFromCK(cookie);
-        JSONObject existCK = this.getExistCK(qlConfig, ptPin);
-
-        // 保存并启用
-        this.saveAndEnableEnv(qlConfig, "JD_COOKIE", cookie, existCK.getString("remarks"));
+        List<QLAllNodeSearchResult> qlAllNodeSearchResults = this.searchEnvFromAllNode(ptPin);
+        log.debug("[提交cookie], 所有节点搜索{}, 结果: {}", ptPin, JSON.toJSONString(qlAllNodeSearchResults));
+        if (CollUtil.isEmpty(qlAllNodeSearchResults)) {
+            // 随机一个节点
+            QLConfig qlConfig = availableQlConfigs.get(RandomUtil.randomInt(availableQlConfigs.size()));
+            log.debug("[提交cookie], pt_pin: {}, 在节点{}新增", ptPin, qlConfig.getDisplayName());
+            // 保存并启用
+            this.saveAndEnableEnv(qlConfig, "JD_COOKIE", cookie, "");
+        } else {
+            // 更新
+            List<String> updateNodesNames = qlAllNodeSearchResults.stream().map(e -> e.getQlConfig().getDisplayName()).collect(Collectors.toList());
+            log.debug("[提交cookie], pt_pin: {}, 在一下节点更新: {}", ptPin, JSON.toJSONString(updateNodesNames));
+            qlAllNodeSearchResults.forEach(r -> r.getEnvs().forEach(e -> this.saveAndEnableEnv(r.getQlConfig(), "JD_COOKIE", cookie, e.getString("remarks"))));
+        }
 
         // 生成动态二维码
         JSONObject param = new JSONObject();
@@ -182,15 +192,18 @@ public class QLService implements ITask {
         }
     }
 
-    public List<JSONObject> searchEnvFromAllNode(String searchValue) {
+    public List<QLAllNodeSearchResult> searchEnvFromAllNode(String searchValue) {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
-        List<CompletableFuture<List<JSONObject>>> futures =
-                qlConfigs.stream().map(ql -> CompletableFuture.supplyAsync(() -> this.searchEnv(ql, searchValue), asyncExecutor)).collect(Collectors.toList());
+        List<CompletableFuture<QLAllNodeSearchResult>> futures =
+                qlConfigs.stream().map(ql -> CompletableFuture.supplyAsync(() -> {
+                    List<JSONObject> envs = this.searchEnv(ql, searchValue);
+                    return new QLAllNodeSearchResult(ql, envs);
+                }, asyncExecutor)).collect(Collectors.toList());
         CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
-        CompletableFuture<List<List<JSONObject>>> finalResults = allFutures.thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
+        CompletableFuture<List<QLAllNodeSearchResult>> finalResults = allFutures.thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
         try {
-            return finalResults.get().stream().flatMap(Collection::stream).collect(Collectors.toList());
+            return finalResults.get().stream().filter(r -> r.getEnvs().size() > 0).collect(Collectors.toList());
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -348,5 +361,20 @@ public class QLService implements ITask {
         }
         log.debug(StrUtil.format("[青龙 - {}], 获取存在的Cookie: {}, 最终返回结果: {}", qlConfig.getDisplayName(), ptPin, result.toJSONString()));
         return result;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @AllArgsConstructor
+    public class QLAllNodeSearchResult {
+
+        /**
+         * 青龙配置
+         */
+        private QLConfig qlConfig;
+        /**
+         * 单个ql搜索到的环境变量
+         */
+        private List<JSONObject> envs;
     }
 }

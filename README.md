@@ -65,9 +65,29 @@ docker run -d \
     export WP_APP_TOKEN_ONE="AT_xxx"
     ```
 
-## 财富岛api
+## 财富岛
 `http://ip:port/api/cfd`
+在青龙新增环境变量`JDX_CFD_COOKIE`，值为`pt_key=xxx;pt_pin=xxx;`即可，备注上`uid`即可推送
 
+## Q&A
+1. **为什么扫码了，没有绑定上uid？**
+
+    出现这种问题的一般是中文的`pt_pin`，自己尝试在青龙后台，环境变量的搜索框里面，用自己的`pt_pin`搜索一下，是不是能搜索出来你的Cookie，据测试是低版本的青龙无法搜索出来，**建议升级青龙版本**.
+2. **为什么备注没有`@@`，只有`UID_xxxx`**
+
+    如果你出现了这种问题，建议去看下医生。
+3. **无法正常生成二维码**
+
+    在`JDX`后台配置`wxPusher`的`appToken`
+4. **都配置正常了，没有一对一推送**
+
+    这里建议看下[ccwav/QLScript2](https://github.com/ccwav/QLScript2) 的设置说明
+    
+    另外，青龙和ccwav都有说明：
+    > ql repo 会默认复制 deps 目录下的文件到仓库目录，所以你要固定你的 sendNotify 或者其他文件时，只需要把文件放到deps目录即可
+5. **青龙连接失败**
+
+   建议新增新的青龙client来使用（新的`cliendId`和新的`cliendSecret`）
 ## 🥂 更新说明
 1. 停止并删除容器
 ```shell

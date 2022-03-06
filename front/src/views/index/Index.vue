@@ -20,8 +20,7 @@
       <van-tag size="medium" type="primary">剩余车位：{{remain}}</van-tag>
     </div>
 
-    <div style="padding: 16px 8px ">
-      {{ bottomNotice }}
+    <div style="padding: 16px 8px " v-html="bottomNotice">
     </div>
   </div>
 </template>
