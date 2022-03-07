@@ -144,7 +144,9 @@ public class QLService implements ITask {
                 String remark = env.getString("remarks");
                 Set<String> newRemarkSplit = StrUtil.split(remark, "@@").stream().filter(e -> !StrUtil.startWith(e, "UID_") && StrUtil.isNotBlank(e)).collect(Collectors.toSet());
                 newRemarkSplit.add(uid);
-                newRemarkSplit.add(ptPin);
+                if (newRemarkSplit.size() <= 1) {
+                    newRemarkSplit.add(ptPin);
+                }
                 String newRemark = CollUtil.join(newRemarkSplit, "@@");
                 env.put("remarks", newRemark);
                 this.updateEnv(qlConfig, env);
