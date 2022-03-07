@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -59,7 +60,7 @@ public class QLService implements ITask {
             throw new BizException("无可用节点");
         }
         String ptPin = JDXUtil.getPtPinFromCK(cookie);
-        List<QLAllNodeSearchResult> qlAllNodeSearchResults = this.searchEnvFromAllNode(ptPin);
+        List<QLAllNodeSearchResult> qlAllNodeSearchResults = this.searchEnvFromAllNode(ptPin, "JD_COOKIE");
         log.debug("[提交cookie], 所有节点搜索{}, 结果: {}", ptPin, JSON.toJSONString(qlAllNodeSearchResults));
         if (CollUtil.isEmpty(qlAllNodeSearchResults)) {
             // 随机一个节点
@@ -141,8 +142,11 @@ public class QLService implements ITask {
             }
             envs.forEach(env -> {
                 String remark = env.getString("remarks");
-                List<String> newRemarkSplit = StrUtil.split(remark, "@@").stream().filter(e -> !StrUtil.startWith(e, "UID_") && StrUtil.isNotBlank(e)).collect(Collectors.toList());
+                Set<String> newRemarkSplit = StrUtil.split(remark, "@@").stream().filter(e -> !StrUtil.startWith(e, "UID_") && StrUtil.isNotBlank(e)).collect(Collectors.toSet());
                 newRemarkSplit.add(uid);
+                if (newRemarkSplit.size() <= 1) {
+                    newRemarkSplit.add(ptPin);
+                }
                 String newRemark = CollUtil.join(newRemarkSplit, "@@");
                 env.put("remarks", newRemark);
                 this.updateEnv(qlConfig, env);
@@ -192,12 +196,15 @@ public class QLService implements ITask {
         }
     }
 
-    public List<QLAllNodeSearchResult> searchEnvFromAllNode(String searchValue) {
+    public List<QLAllNodeSearchResult> searchEnvFromAllNode(String searchValue, String name) {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
         List<CompletableFuture<QLAllNodeSearchResult>> futures =
                 qlConfigs.stream().map(ql -> CompletableFuture.supplyAsync(() -> {
                     List<JSONObject> envs = this.searchEnv(ql, searchValue);
+                    if (StrUtil.isNotBlank(name)) {
+                        envs = envs.stream().filter(e -> StrUtil.equalsIgnoreCase(e.getString("name"), name)).collect(Collectors.toList());
+                    }
                     return new QLAllNodeSearchResult(ql, envs);
                 }, asyncExecutor)).collect(Collectors.toList());
         CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
@@ -275,6 +282,30 @@ public class QLService implements ITask {
         }
     }
 
+    public void refreshQLUsedCookieCount() {
+        List<QLConfig> qlConfigs = systemConfigProperties.getQls();
+        ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
+        CountDownLatch countDownLatch = new CountDownLatch(qlConfigs.size());
+        qlConfigs.forEach(ql -> asyncExecutor.execute(() -> {
+            try {
+                List<JSONObject> normalEnvs = this.searchEnv(ql, "JD_COOKIE", 0);
+                ql.setUsed(normalEnvs.size());
+                if (ql.getUsed() >= ql.getMax()) {
+                    ql.setDisabled(1);
+                }
+            } catch (Exception e) {
+                log.error(StrUtil.format("refreshQLUsedCookieCount err: {}", e));
+            } finally {
+                countDownLatch.countDown();
+            }
+        }));
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error(StrUtil.format("refreshQLUsedCookieCount err wher countDownLatch await: {}", e));
+        }
+    }
+
     public synchronized String getQLToken(String displayName) {
         QLConfig qlConfig = systemConfigProperties.getQLConfigByDisplayName(displayName);
         if (Objects.isNull(qlConfig)) {
@@ -309,30 +340,6 @@ public class QLService implements ITask {
     private void timerRefreshToken() {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         qlConfigs.forEach(this::refreshToken);
-    }
-
-    private void refreshQLUsedCookieCount() {
-        List<QLConfig> qlConfigs = systemConfigProperties.getQls();
-        ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
-        CountDownLatch countDownLatch = new CountDownLatch(qlConfigs.size());
-        qlConfigs.forEach(ql -> asyncExecutor.execute(() -> {
-            try {
-                List<JSONObject> normalEnvs = this.searchEnv(ql, "JD_COOKIE", 0);
-                ql.setUsed(normalEnvs.size());
-                if (ql.getUsed() >= ql.getMax()) {
-                    ql.setDisabled(1);
-                }
-            } catch (Exception e) {
-                log.error(StrUtil.format("refreshQLUsedCookieCount err: {}", e));
-            } finally {
-                countDownLatch.countDown();
-            }
-        }));
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error(StrUtil.format("refreshQLUsedCookieCount err wher countDownLatch await: {}", e));
-        }
     }
 
     /**
