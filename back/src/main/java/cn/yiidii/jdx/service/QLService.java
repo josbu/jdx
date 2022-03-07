@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -141,8 +142,9 @@ public class QLService implements ITask {
             }
             envs.forEach(env -> {
                 String remark = env.getString("remarks");
-                List<String> newRemarkSplit = StrUtil.split(remark, "@@").stream().filter(e -> !StrUtil.startWith(e, "UID_") && StrUtil.isNotBlank(e)).collect(Collectors.toList());
+                Set<String> newRemarkSplit = StrUtil.split(remark, "@@").stream().filter(e -> !StrUtil.startWith(e, "UID_") && StrUtil.isNotBlank(e)).collect(Collectors.toSet());
                 newRemarkSplit.add(uid);
+                newRemarkSplit.add(ptPin);
                 String newRemark = CollUtil.join(newRemarkSplit, "@@");
                 env.put("remarks", newRemark);
                 this.updateEnv(qlConfig, env);
