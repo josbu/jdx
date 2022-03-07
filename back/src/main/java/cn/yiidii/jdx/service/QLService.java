@@ -275,6 +275,30 @@ public class QLService implements ITask {
         }
     }
 
+    public void refreshQLUsedCookieCount() {
+        List<QLConfig> qlConfigs = systemConfigProperties.getQls();
+        ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
+        CountDownLatch countDownLatch = new CountDownLatch(qlConfigs.size());
+        qlConfigs.forEach(ql -> asyncExecutor.execute(() -> {
+            try {
+                List<JSONObject> normalEnvs = this.searchEnv(ql, "JD_COOKIE", 0);
+                ql.setUsed(normalEnvs.size());
+                if (ql.getUsed() >= ql.getMax()) {
+                    ql.setDisabled(1);
+                }
+            } catch (Exception e) {
+                log.error(StrUtil.format("refreshQLUsedCookieCount err: {}", e));
+            } finally {
+                countDownLatch.countDown();
+            }
+        }));
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error(StrUtil.format("refreshQLUsedCookieCount err wher countDownLatch await: {}", e));
+        }
+    }
+
     public synchronized String getQLToken(String displayName) {
         QLConfig qlConfig = systemConfigProperties.getQLConfigByDisplayName(displayName);
         if (Objects.isNull(qlConfig)) {
@@ -309,30 +333,6 @@ public class QLService implements ITask {
     private void timerRefreshToken() {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         qlConfigs.forEach(this::refreshToken);
-    }
-
-    private void refreshQLUsedCookieCount() {
-        List<QLConfig> qlConfigs = systemConfigProperties.getQls();
-        ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
-        CountDownLatch countDownLatch = new CountDownLatch(qlConfigs.size());
-        qlConfigs.forEach(ql -> asyncExecutor.execute(() -> {
-            try {
-                List<JSONObject> normalEnvs = this.searchEnv(ql, "JD_COOKIE", 0);
-                ql.setUsed(normalEnvs.size());
-                if (ql.getUsed() >= ql.getMax()) {
-                    ql.setDisabled(1);
-                }
-            } catch (Exception e) {
-                log.error(StrUtil.format("refreshQLUsedCookieCount err: {}", e));
-            } finally {
-                countDownLatch.countDown();
-            }
-        }));
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error(StrUtil.format("refreshQLUsedCookieCount err wher countDownLatch await: {}", e));
-        }
     }
 
     /**

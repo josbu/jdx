@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import cn.yiidii.jdx.config.prop.SystemConfigProperties;
 import cn.yiidii.jdx.config.prop.SystemConfigProperties.QLConfig;
 import cn.yiidii.jdx.model.ex.BizException;
-import cn.yiidii.jdx.util.ScheduleTaskUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -26,7 +25,7 @@ import org.springframework.stereotype.Service;
 public class AdminService {
 
     private final SystemConfigProperties systemConfigProperties;
-    private final ScheduleTaskUtil scheduleTaskUtil;
+    private final QLService qlService;
 
     public JSONArray getQLConfig() {
         List<QLConfig> qls = systemConfigProperties.getQls();
@@ -46,6 +45,8 @@ public class AdminService {
         List<QLConfig> qls = systemConfigProperties.getQls();
         qls.add(qlConfig);
         log.debug(StrUtil.format("[admin] 添加ql: {}", JSON.toJSONString(qls)));
+        // 刷新下次数
+        qlService.refreshQLUsedCookieCount();
         return qls;
     }
 
@@ -64,6 +65,8 @@ public class AdminService {
         qlConfigMap.put(qlConfig.getDisplayName(), qlConfig);
         qls = qlConfigMap.values().stream().collect(Collectors.toList());
         systemConfigProperties.setQls(qlConfigMap.values().stream().collect(Collectors.toList()));
+        // 刷新下次数
+        qlService.refreshQLUsedCookieCount();
         log.debug(StrUtil.format("[admin] 更新ql: {}", JSON.toJSONString(qls)));
         return qls;
     }
