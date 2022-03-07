@@ -60,7 +60,7 @@ public class QLService implements ITask {
             throw new BizException("无可用节点");
         }
         String ptPin = JDXUtil.getPtPinFromCK(cookie);
-        List<QLAllNodeSearchResult> qlAllNodeSearchResults = this.searchEnvFromAllNode(ptPin);
+        List<QLAllNodeSearchResult> qlAllNodeSearchResults = this.searchEnvFromAllNode(ptPin, "JD_COOKIE");
         log.debug("[提交cookie], 所有节点搜索{}, 结果: {}", ptPin, JSON.toJSONString(qlAllNodeSearchResults));
         if (CollUtil.isEmpty(qlAllNodeSearchResults)) {
             // 随机一个节点
@@ -196,12 +196,15 @@ public class QLService implements ITask {
         }
     }
 
-    public List<QLAllNodeSearchResult> searchEnvFromAllNode(String searchValue) {
+    public List<QLAllNodeSearchResult> searchEnvFromAllNode(String searchValue, String name) {
         List<QLConfig> qlConfigs = systemConfigProperties.getQls();
         ThreadPoolTaskExecutor asyncExecutor = SpringUtil.getBean("asyncExecutor", ThreadPoolTaskExecutor.class);
         List<CompletableFuture<QLAllNodeSearchResult>> futures =
                 qlConfigs.stream().map(ql -> CompletableFuture.supplyAsync(() -> {
                     List<JSONObject> envs = this.searchEnv(ql, searchValue);
+                    if (StrUtil.isNotBlank(name)) {
+                        envs = envs.stream().filter(e -> StrUtil.equalsIgnoreCase(e.getString("name"), name)).collect(Collectors.toList());
+                    }
                     return new QLAllNodeSearchResult(ql, envs);
                 }, asyncExecutor)).collect(Collectors.toList());
         CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
